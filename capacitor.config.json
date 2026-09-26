@@ -1,7 +1,7 @@
 {
   "appId": "com.reviewplan.app",
   "appName": "复习计划单",
-  "webDir": "./www",
+  "webDir": "./docs",
   "android": {
     "allowMixedContent": false,
     "webContentsDebuggingEnabled": false
