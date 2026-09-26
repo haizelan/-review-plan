@@ -2,126 +2,44 @@ name: Build Android APK
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
   workflow_dispatch:
-
-permissions:
-  contents: read
-
-defaults:
-  run:
-    shell: bash
-
-env:
-  NODE_VERSION: '20'
-  JAVA_VERSION: '17'
-  COMPILE_SDK: '34'
-  BUILD_TOOLS: '34.0.0'
-  APK_NAME: review-plan-debug.apk
 
 jobs:
   build:
-    name: Build Debug APK
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    - name: Checkout Source Code
+      uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
 
-      - name: Setup JDK
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: ${{ env.JAVA_VERSION }}
+    - name: Install dependencies
+      run: npm install
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+    - name: Add Android platform
+      run: npx cap add android
 
-      - name: Accept all Android SDK licenses
-        run: |
-          set -x
-          SDK="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-/usr/local/lib/android/sdk}}"
-          echo "ANDROID_SDK_ROOT=$SDK" >> "$GITHUB_ENV"
-          echo "ANDROID_HOME=$SDK" >> "$GITHUB_ENV"
+    - name: Sync web assets
+      run: npx cap sync android
 
-          SDKMGR="$(command -v sdkmanager || true)"
-          if [ -z "$SDKMGR" ]; then
-            SDKMGR="$(find "$SDK/cmdline-tools" -type f -name sdkmanager 2>/dev/null | head -n 1)"
-          fi
-          if [ -z "$SDKMGR" ]; then
-            echo "::error::sdkmanager 未找到，Android SDK 安装失败"
-            exit 1
-          fi
-          echo "$(dirname "$SDKMGR")" >> "$GITHUB_PATH"
+    - name: Setup Android SDK and Accept Licenses
+      run: |
+        echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || echo "y" | $ANDROID_HOME/tools/bin/sdkmanager --licenses || echo "y" | sdkmanager --licenses
+      continue-on-error: true
 
-          # yes 会因为管道提前关闭返回非 0，这里显式忽略，跑两次确保全部协议被接受
-          set +e
-          yes | "$SDKMGR" --sdk_root="$SDK" --licenses
-          yes | "$SDKMGR" --sdk_root="$SDK" --licenses
-          set -e
+    - name: Build Debug APK
+      run: |
+        cd android
+        chmod +x gradlew
+        ./gradlew assembleDebug
 
-          mkdir -p "$SDK/licenses"
-          ls -la "$SDK/licenses"
-
-      - name: Install Android SDK packages
-        run: |
-          set -e
-          SDK="${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}"
-          SDKMGR="$(command -v sdkmanager || echo "$SDK/cmdline-tools/latest/bin/sdkmanager")"
-          yes | "$SDKMGR" --sdk_root="$SDK" --install \
-            "platform-tools" \
-            "platforms;android-${COMPILE_SDK}" \
-            "build-tools;${BUILD_TOOLS}" || true
-          "$SDKMGR" --sdk_root="$SDK" --list_installed
-
-      - name: Check web assets (webDir = ./docs)
-        run: |
-          set -e
-          if [ ! -f docs/index.html ]; then
-            echo "::error::docs/index.html 不存在，请把 PWA 的 index.html 放在 docs/ 目录（capacitor.config.json 的 webDir 为 ./docs）"
-            exit 1
-          fi
-          ls -la docs
-
-      - name: Install Capacitor dependencies
-        run: npm install --no-audit --no-fund
-
-      - name: Add Android platform
-        run: npx cap add android
-
-      - name: Sync web assets into Android project
-        run: npx cap sync android
-
-      - name: Build debug APK
-        run: |
-          set -e
-          cd android
-          chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon --stacktrace
-
-      - name: Collect APK
-        run: |
-          set -e
-          APK=$(find android/app/build/outputs/apk/debug -name "*.apk" | head -n 1)
-          if [ -z "$APK" ]; then
-            echo "::error::未找到 debug APK"
-            exit 1
-          fi
-          echo "APK: $APK"
-          mkdir -p dist
-          cp "$APK" "dist/${APK_NAME}"
-          ls -la dist
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: review-plan-debug-apk
-          path: dist/${{ env.APK_NAME }}
-          if-no-files-found: error
-          retention-days: 30
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: app-debug
+        path: android/app/build/outputs/apk/debug/app-debug.apk
