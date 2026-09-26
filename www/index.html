@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>复习计划单</title>
+<meta name="theme-color" content="#7fb2e5">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="复习计划单">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  :root {
+    --blue: #6aa8e0;
+    --blue-dark: #3f80c4;
+    --blue-soft: #eaf3fc;
+    --ink: #2c3a47;
+    --muted: #7b8b9a;
+    --line: #dbe7f3;
+    --bg: #f4f9ff;
+    --white: #ffffff;
+    --danger: #e2726e;
+    --ok: #4caf8f;
+  }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    background: linear-gradient(180deg, #eaf4ff 0%, var(--bg) 320px);
+    color: var(--ink);
+    line-height: 1.6;
+    min-height: 100vh;
+    padding: 0 12px calc(28px + env(safe-area-inset-bottom));
+    -webkit-text-size-adjust: 100%;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; }
+  header {
+    text-align: center;
+    padding: 26px 4px 14px;
+  }
+  header img {
+    width: 62px; height: 62px;
+    border-radius: 18px;
+    box-shadow: 0 6px 18px rgba(90, 150, 210, .28);
+    display: block;
+    margin: 0 auto 10px;
+  }
+  header h1 {
+    font-size: 22px;
+    margin: 0;
+    letter-spacing: .06em;
+    color: var(--blue-dark);
+  }
+  header p {
+    margin: 4px 0 0;
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: .08em;
+  }
+  .stats {
+    display: flex;
+    gap: 10px;
+    margin: 14px 0 18px;
+  }
+  .stat {
+    flex: 1;
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 10px 8px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(120, 170, 215, .10);
+  }
+  .stat b { display: block; font-size: 20px; color: var(--blue-dark); line-height: 1.3; }
+  .stat span { font-size: 11px; color: var(--muted); }
+  section.card {
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 14px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 10px rgba(120, 170, 215, .10);
+  }
+  h2 {
+    font-size: 15px;
+    margin: 0 0 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    color: var(--blue-dark);
+    letter-spacing: .04em;
+  }
+  h2 .count {
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--muted);
+    background: var(--blue-soft);
+    border-radius: 999px;
+    padding: 2px 10px;
+  }
+  label { display: block; font-size: 12px; color: var(--muted); margin: 0 0 4px; }
+  input[type="text"], textarea, select {
+    width: 100%;
+    font: inherit;
+    font-size: 15px;
+    color: var(--ink);
+    background: #fbfdff;
+    border: 1px solid var(--line);
+    border-radius: 11px;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+    outline: none;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  input[type="text"]:focus, textarea:focus, select:focus {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 3px rgba(106, 168, 224, .18);
+  }
+  textarea { min-height: 76px; resize: vertical; }
+  .btn {
+    font: inherit;
+    font-size: 15px;
+    border: 1px solid var(--line);
+    background: var(--white);
+    color: var(--ink);
+    border-radius: 11px;
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: transform .08s, background .15s, border-color .15s;
+  }
+  .btn:active { transform: scale(.97); }
+  .btn.primary {
+    background: linear-gradient(135deg, #7fb8ea, var(--blue-dark));
+    border-color: var(--blue-dark);
+    color: #fff;
+    font-weight: 600;
+  }
+  .btn.full { width: 100%; }
+  .btn.ghost { background: var(--blue-soft); border-color: #cfe3f7; color: var(--blue-dark); }
+  .btn.danger { color: var(--danger); border-color: #f4d7d6; background: #fdf6f6; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .row > .btn { flex: 1; min-width: 110px; }
+  ul.list { list-style: none; margin: 0; padding: 0; }
+  li.item {
+    border: 1px solid var(--line);
+    border-radius: 13px;
+    padding: 12px;
+    margin-bottom: 10px;
+    background: #fdfeff;
+  }
+  li.item:last-child { margin-bottom: 0; }
+  li.item.due { border-color: #bcdcf7; background: linear-gradient(180deg, #f6fbff, #ffffff); }
+  .item-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .item-title { font-size: 15px; font-weight: 600; word-break: break-word; }
+  .item-body {
+    font-size: 13.5px;
+    color: #4b5b69;
+    white-space: pre-wrap;
+    word-break: break-word;
+    margin: 6px 0 0;
+  }
+  .tag {
+    flex: 0 0 auto;
+    font-size: 11px;
+    border-radius: 999px;
+    padding: 2px 9px;
+    background: var(--blue-soft);
+    color: var(--blue-dark);
+    white-space: nowrap;
+  }
+  .tag.warn { background: #fdf0e4; color: #c17d34; }
+  .tag.done { background: #e8f6f0; color: var(--ok); }
+  .meta { font-size: 11.5px; color: var(--muted); margin-top: 8px; }
+  .item-actions { display: flex; gap: 8px; margin-top: 10px; }
+  .item-actions .btn { flex: 1; padding: 9px 10px; font-size: 14px; }
+  .empty {
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+    padding: 18px 6px;
+    border: 1px dashed var(--line);
+    border-radius: 13px;
+  }
+  footer {
+    text-align: center;
+    font-size: 11px;
+    color: var(--muted);
+    padding: 6px 0 10px;
+    letter-spacing: .04em;
+  }
+  .hidden { display: none !important; }
+  @media (max-width: 420px) {
+    header h1 { font-size: 20px; }
+    .row > .btn { min-width: 92px; font-size: 14px; padding: 10px 8px; }
+    .item-actions .btn { font-size: 13px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <img src="icon-192.png" alt="复习计划单">
+    <h1>复习计划单</h1>
+    <p>1 · 3 · 7 · 14 · 30 · 60 天科学复习</p>
+  </header>
+
+  <div class="stats">
+    <div class="stat"><b id="statToday">0</b><span>今日待复习</span></div>
+    <div class="stat"><b id="statAll">0</b><span>全部条目</span></div>
+    <div class="stat"><b id="statDone">0</b><span>已掌握</span></div>
+  </div>
+
+  <section class="card" id="todayCard">
+    <h2>今天要复习 <span class="count" id="todayCount">0 条</span></h2>
+    <div id="todayList"></div>
+  </section>
+
+  <section class="card">
+    <h2>添加学习条目</h2>
+    <label for="titleInput">标题</label>
+    <input type="text" id="titleInput" placeholder="例如：英语单词 Unit 3" maxlength="80" autocomplete="off">
+    <label for="contentInput">内容</label>
+    <textarea id="contentInput" placeholder="写下要复习的知识点、题目或笔记……" maxlength="4000"></textarea>
+    <button class="btn primary full" id="addBtn">添加（1 天后首次复习）</button>
+  </section>
+
+  <section class="card">
+    <h2>全部条目 <span class="count" id="allCount">0 条</span></h2>
+    <div id="allList"></div>
+  </section>
+
+  <section class="card">
+    <h2>数据与提醒</h2>
+    <div class="row">
+      <button class="btn ghost" id="exportBtn">导出 JSON</button>
+      <button class="btn ghost" id="importBtn">导入 JSON</button>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <button class="btn" id="notifyBtn">开启今日提醒</button>
+    </div>
+    <input type="file" id="importFile" accept=".json,application/json" class="hidden">
+    <div class="meta" id="notifyState">提醒状态：未开启</div>
+  </section>
+
+  <footer id="footer">数据仅保存在本机浏览器中</footer>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var STORAGE_KEY = 'review-plan-v1:data';
+  var NOTIFY_KEY = 'review-plan-v1:notified';
+  var INTERVALS = [1, 3, 7, 14, 30, 60];
+  var LABELS = ['1天', '3天', '7天', '14天', '30天', '60天'];
+
+  /* ---------- 日期工具 ---------- */
+  function pad(n) { return n < 10 ? '0' + n : '' + n; }
+  function toDateStr(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+  function todayStr() { return toDateStr(new Date()); }
+  function parseDate(s) {
+    var p = String(s).split('-');
+    return new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+  }
+  function addDays(dateStr, n) {
+    var d = parseDate(dateStr);
+    d.setDate(d.getDate() + n);
+    return toDateStr(d);
+  }
+  function diffDays(dateStr) {
+    var t = new Date();
+    var base = new Date(t.getFullYear(), t.getMonth(), t.getDate());
+    return Math.round((parseDate(dateStr) - base) / 86400000);
+  }
+  function dueText(dateStr) {
+    if (!dateStr) return '已掌握';
+    var n = diffDays(dateStr);
+    if (n === 0) return '今天到期';
+    if (n === 1) return '明天到期';
+    if (n > 1) return n + ' 天后到期';
+    return '已逾期 ' + Math.abs(n) + ' 天';
+  }
+
+  /* ---------- 数据层 ---------- */
+  var state = { items: [] };
+
+  function load() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      var data = JSON.parse(raw);
+      if (data && Array.isArray(data.items)) {
+        state.items = data.items.map(normalize);
+      }
+    } catch (e) {
+      state.items = [];
+    }
+  }
+
+  function normalize(it) {
+    it = it || {};
+    var stage = Number(it.stage);
+    if (isNaN(stage) || stage < 0) stage = 0;
+    if (stage > INTERVALS.length - 1) stage = INTERVALS.length - 1;
+    return {
+      id: it.id || uid(),
+      title: String(it.title == null ? '' : it.title),
+      content: String(it.content == null ? '' : it.content),
+      createdAt: it.createdAt || new Date().toISOString(),
+      updatedAt: it.updatedAt || it.createdAt || new Date().toISOString(),
+      stage: stage,
+      nextReview: it.done ? null : (it.nextReview || addDays(todayStr(), INTERVALS[stage])),
+      done: !!it.done,
+      history: Array.isArray(it.history) ? it.history : []
+    };
+  }
+
+  function save() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+  }
+
+  function uid() {
+    return 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  }
+
+  /* ---------- 业务操作 ---------- */
+  function addItem(title, content) {
+    var now = new Date().toISOString();
+    var item = {
+      id: uid(),
+      title: title,
+      content: content,
+      createdAt: now,
+      updatedAt: now,
+      stage: 0,
+      nextReview: addDays(todayStr(), INTERVALS[0]),
+      done: false,
+      history: []
+    };
+    state.items.unshift(item);
+    save();
+    render();
+  }
+
+  function remember(id) {
+    var it = find(id);
+    if (!it) return;
+    var now = new Date().toISOString();
+    it.history.push({ at: now, result: 'remember', stage: it.stage });
+    if (it.stage >= INTERVALS.length - 1) {
+      it.done = true;
+      it.nextReview = null;
+    } else {
+      it.stage = it.stage + 1;
+      it.nextReview = addDays(todayStr(), INTERVALS[it.stage]);
+    }
+    it.updatedAt = now;
+    save();
+    render();
+  }
+
+  function forget(id) {
+    var it = find(id);
+    if (!it) return;
+    var now = new Date().toISOString();
+    it.history.push({ at: now, result: 'forget', stage: it.stage });
+    it.done = false;
+    it.stage = 0;
+    it.nextReview = addDays(todayStr(), INTERVALS[0]);
+    it.updatedAt = now;
+    save();
+    render();
+  }
+
+  function reopen(id) {
+    var it = find(id);
+    if (!it) return;
+    it.done = false;
+    it.stage = 0;
+    it.nextReview = addDays(todayStr(), INTERVALS[0]);
+    it.updatedAt = new Date().toISOString();
+    save();
+    render();
+  }
+
+  function remove(id) {
+    var it = find(id);
+    if (!it) return;
+    if (!window.confirm('确定删除「' + it.title + '」吗？')) return;
+    state.items = state.items.filter(function (x) { return x.id !== id; });
+    save();
+    render();
+  }
+
+  function find(id) {
+    for (var i = 0; i < state.items.length; i++) {
+      if (state.items[i].id === id) return state.items[i];
+    }
+    return null;
+  }
+
+  function todayItems() {
+    var t = todayStr();
+    return state.items.filter(function (it) {
+      return !it.done && it.nextReview && it.nextReview <= t;
+    }).sort(function (a, b) { return a.nextReview < b.nextReview ? -1 : 1; });
+  }
+
+  function allItems() {
+    return state.items.slice().sort(function (a, b) {
+      if (a.done !== b.done) return a.done ? 1 : -1;
+      var x = a.nextReview || '9999-99-99';
+      var y = b.nextReview || '9999-99-99';
+      return x < y ? -1 : (x > y ? 1 : 0);
+    });
+  }
+
+  /* ---------- 渲染 ---------- */
+  function el(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
+  }
+
+  function stageTag(it) {
+    if (it.done) return el('span', 'tag done', '已掌握');
+    var isDue = it.nextReview && it.nextReview <= todayStr();
+    var tag = el('span', 'tag' + (isDue ? ' warn' : ''), '间隔 ' + LABELS[it.stage]);
+    return tag;
+  }
+
+  function buildItem(it, showActions) {
+    var li = el('li', 'item' + (it.nextReview && it.nextReview <= todayStr() && !it.done ? ' due' : ''));
+
+    var head = el('div', 'item-head');
+    head.appendChild(el('div', 'item-title', it.title || '（无标题）'));
+    head.appendChild(stageTag(it));
+    li.appendChild(head);
+
+    if (it.content) li.appendChild(el('div', 'item-body', it.content));
+
+    var meta = '下次复习：' + dueText(it.nextReview) + (it.nextReview ? '（' + it.nextReview + '）' : '');
+    li.appendChild(el('div', 'meta', meta));
+
+    if (showActions) {
+      var acts = el('div', 'item-actions');
+      if (it.done) {
+        var again = el('button', 'btn ghost', '重新开始');
+        again.type = 'button';
+        again.addEventListener('click', function () { reopen(it.id); });
+        acts.appendChild(again);
+      } else {
+        var ok = el('button', 'btn primary', '记住了');
+        ok.type = 'button';
+        ok.addEventListener('click', function () { remember(it.id); });
+        var no = el('button', 'btn', '忘了');
+        no.type = 'button';
+        no.addEventListener('click', function () { forget(it.id); });
+        acts.appendChild(ok);
+        acts.appendChild(no);
+      }
+      var del = el('button', 'btn danger', '删除');
+      del.type = 'button';
+      del.addEventListener('click', function () { remove(it.id); });
+      acts.appendChild(del);
+      li.appendChild(acts);
+    }
+    return li;
+  }
+
+  function fill(container, items, showActions, emptyText) {
+    container.textContent = '';
+    if (!items.length) {
+      container.appendChild(el('div', 'empty', emptyText));
+      return;
+    }
+    var ul = el('ul', 'list');
+    items.forEach(function (it) { ul.appendChild(buildItem(it, showActions)); });
+    container.appendChild(ul);
+  }
+
+  function render() {
+    var due = todayItems();
+    var doneCount = state.items.filter(function (i) { return i.done; }).length;
+
+    document.getElementById('statToday').textContent = due.length;
+    document.getElementById('statAll').textContent = state.items.length;
+    document.getElementById('statDone').textContent = doneCount;
+    document.getElementById('todayCount').textContent = due.length + ' 条';
+    document.getElementById('allCount').textContent = state.items.length + ' 条';
+
+    fill(document.getElementById('todayList'), due, true,
+      due.length ? '' : '今天没有需要复习的内容，休息一下吧 🌿');
+    fill(document.getElementById('allList'), allItems(), true,
+      '还没有条目，先在上面添加一条吧。');
+  }
+
+  /* ---------- 导出 / 导入 ---------- */
+  function exportJSON() {
+    var payload = { app: '复习计划单', version: 1, exportedAt: new Date().toISOString(), items: state.items };
+    var blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = '复习计划单-' + todayStr() + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
+  }
+
+  function mergeItems(incoming) {
+    var added = 0, updated = 0;
+    incoming.forEach(function (raw) {
+      var it = normalize(raw);
+      var old = find(it.id);
+      if (!old) {
+        if (!it.title && !it.content) return;
+        state.items.push(it);
+        added++;
+      } else if (String(it.updatedAt) > String(old.updatedAt)) {
+        var idx = state.items.indexOf(old);
+        state.items[idx] = it;
+        updated++;
+      }
+    });
+    return { added: added, updated: updated };
+  }
+
+  function importJSON(file) {
+    var reader = new FileReader();
+    reader.onload = function () {
+      var parsed;
+      try {
+        parsed = JSON.parse(String(reader.result));
+      } catch (e) {
+        window.alert('导入失败：不是有效的 JSON 文件。');
+        return;
+      }
+      var list = parsed && (Array.isArray(parsed) ? parsed : parsed.items);
+      if (!Array.isArray(list)) {
+        window.alert('导入失败：文件里没有 items 数据。');
+        return;
+      }
+      var res = mergeItems(list);
+      save();
+      render();
+      window.alert('导入完成：新增 ' + res.added + ' 条，更新 ' + res.updated + ' 条。');
+    };
+    reader.onerror = function () { window.alert('导入失败：无法读取文件。'); };
+    reader.readAsText(file);
+  }
+
+  /* ---------- 通知提醒 ---------- */
+  function updateNotifyState() {
+    var box = document.getElementById('notifyState');
+    if (!('Notification' in window)) {
+      box.textContent = '提醒状态：当前浏览器不支持通知';
+      document.getElementById('notifyBtn').disabled = true;
+      return;
+    }
+    var p = Notification.permission;
+    box.textContent = '提醒状态：' + (p === 'granted' ? '已开启（打开页面时提醒今日复习）' : (p === 'denied' ? '已被浏览器拒绝，请在设置中允许' : '未开启'));
+    document.getElementById('notifyBtn').textContent = p === 'granted' ? '发送今日提醒' : '开启今日提醒';
+  }
+
+  function notifyToday(force) {
+    if (!('Notification' in window)) return;
+    if (Notification.permission !== 'granted') return;
+    var due = todayItems();
+    if (!due.length) {
+      if (force) window.alert('今天没有需要复习的内容。');
+      return;
+    }
+    if (!force && localStorage.getItem(NOTIFY_KEY) === todayStr()) return;
+    try {
+      var body = '今天有 ' + due.length + ' 条内容需要复习：' + due.slice(0, 3).map(function (i) { return i.title; }).join('、') + (due.length > 3 ? ' 等' : '');
+      var n = new Notification('复习计划单', { body: body, icon: 'icon-192.png', tag: 'review-plan-today' });
+      n.onclick = function () { window.focus(); n.close(); };
+    } catch (e) {}
+    localStorage.setItem(NOTIFY_KEY, todayStr());
+  }
+
+  function askNotify() {
+    if (!('Notification' in window)) { window.alert('当前浏览器不支持通知。'); return; }
+    if (Notification.permission === 'granted') { notifyToday(true); return; }
+    Notification.requestPermission().then(function () {
+      updateNotifyState();
+      notifyToday(true);
+    });
+  }
+
+  /* ---------- 事件绑定 ---------- */
+  function bind() {
+    document.getElementById('addBtn').addEventListener('click', function () {
+      var t = document.getElementById('titleInput');
+      var c = document.getElementById('contentInput');
+      var title = t.value.trim();
+      var content = c.value.trim();
+      if (!title && !content) {
+        window.alert('请先填写标题或内容。');
+        t.focus();
+        return;
+      }
+      addItem(title || content.slice(0, 20), content);
+      t.value = '';
+      c.value = '';
+      t.focus();
+    });
+
+    document.getElementById('exportBtn').addEventListener('click', exportJSON);
+    document.getElementById('importBtn').addEventListener('click', function () {
+      document.getElementById('importFile').click();
+    });
+    document.getElementById('importFile').addEventListener('change', function (e) {
+      var f = e.target.files && e.target.files[0];
+      if (f) importJSON(f);
+      e.target.value = '';
+    });
+    document.getElementById('notifyBtn').addEventListener('click', askNotify);
+  }
+
+  /* ---------- 启动 ---------- */
+  function init() {
+    load();
+    bind();
+    render();
+    updateNotifyState();
+    window.addEventListener('visibilitychange', function () {
+      if (!document.hidden) { render(); notifyToday(false); }
+    });
+    setTimeout(function () { notifyToday(false); }, 1200);
+    if ('serviceWorker' in navigator && location.protocol.indexOf('http') === 0) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('sw.js').then(function () {
+          var f = document.getElementById('footer');
+          f.textContent = '数据仅保存在本机浏览器中 · 已支持离线使用';
+        }).catch(function () {});
+      });
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+</body>
+</html>
