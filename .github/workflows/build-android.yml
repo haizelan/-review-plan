@@ -1,40 +1,150 @@
-name: Build Android APK
+name: Build Signed Android APK
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
   workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: '20'
+  JAVA_VERSION: '17'
+  # 固定口令（可被 GitHub Secrets 覆盖）
+  DEFAULT_KEYSTORE_PASSWORD: 'reviewplan123'
+  DEFAULT_KEY_ALIAS: 'reviewplan'
+  DEFAULT_KEY_PASSWORD: 'reviewplan123'
+  KEYSTORE_FILE: android-signing/reviewplan.keystore
+  APK_NAME: review-plan-release.apk
 
 jobs:
   build:
+    name: Build & Sign APK
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Source Code
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
 
-    - name: Install dependencies
-      run: npm install
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
 
-    - name: Add Android platform
-      run: npx cap add android
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
 
-    - name: Sync web assets
-      run: npx cap sync android
+      - name: Install Android SDK packages
+        run: |
+          set -e
+          yes | sdkmanager --licenses > /dev/null 2>&1 || true
+          sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
 
-    - name: Build Debug APK
-      run: |
-        cd android
-        chmod +x gradlew
-        ./gradlew assembleDebug
+      - name: Check web assets (webDir = ./docs)
+        run: |
+          set -e
+          if [ ! -f docs/index.html ]; then
+            echo "::error::docs/index.html 不存在，请把 PWA 的 index.html 放在 docs/ 目录（capacitor.config.json 的 webDir 为 ./docs）"
+            exit 1
+          fi
+          ls -la docs
 
-    - name: Upload APK
-      uses: actions/upload-artifact@v4
-      with:
-        name: app-debug
-        path: android/app/build/outputs/apk/debug/app-debug.apk
+      - name: Install Capacitor dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Add Android platform
+        run: npx cap add android
+
+      - name: Sync web assets into Android project
+        run: npx cap sync android
+
+      - name: Generate / restore signing keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          set -e
+          KS_PASS="${KEYSTORE_PASSWORD:-$DEFAULT_KEYSTORE_PASSWORD}"
+          K_ALIAS="${KEY_ALIAS:-$DEFAULT_KEY_ALIAS}"
+          K_PASS="${KEY_PASSWORD:-${KEYSTORE_PASSWORD:-$DEFAULT_KEY_PASSWORD}}"
+
+          mkdir -p android-signing
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "使用 GitHub Secrets 中的 Base64 私钥"
+            printf '%s' "$KEYSTORE_BASE64" | base64 -d > "$KEYSTORE_FILE"
+          else
+            echo "Secrets 未配置，使用固定口令生成新的 keystore"
+            keytool -genkeypair -v \
+              -keystore "$KEYSTORE_FILE" \
+              -alias "$K_ALIAS" \
+              -keyalg RSA -keysize 2048 -validity 10000 \
+              -storepass "$KS_PASS" -keypass "$K_PASS" \
+              -dname "CN=Review Plan, OU=Dev, O=ReviewPlan, L=Beijing, ST=Beijing, C=CN"
+          fi
+
+          echo "::add-mask::$KS_PASS"
+          echo "::add-mask::$K_PASS"
+          echo "KEYSTORE_PATH=$GITHUB_WORKSPACE/$KEYSTORE_FILE" >> "$GITHUB_ENV"
+          echo "KEYSTORE_PASSWORD=$KS_PASS" >> "$GITHUB_ENV"
+          echo "KEY_ALIAS=$K_ALIAS" >> "$GITHUB_ENV"
+          echo "KEY_PASSWORD=$K_PASS" >> "$GITHUB_ENV"
+          keytool -list -keystore "$KEYSTORE_FILE" -storepass "$KS_PASS" | tail -n 3
+
+      - name: Configure release signing in Gradle
+        run: |
+          set -e
+          cat >> android/app/build.gradle <<'EOF'
+
+          // ===== CI release signing (injected by GitHub Actions) =====
+          android {
+              signingConfigs {
+                  release {
+                      storeFile file(System.getenv("KEYSTORE_PATH") ?: "../../android-signing/reviewplan.keystore")
+                      storePassword System.getenv("KEYSTORE_PASSWORD")
+                      keyAlias System.getenv("KEY_ALIAS")
+                      keyPassword System.getenv("KEY_PASSWORD")
+                  }
+              }
+              buildTypes {
+                  release {
+                      signingConfig signingConfigs.release
+                  }
+              }
+          }
+          EOF
+          tail -n 25 android/app/build.gradle
+
+      - name: Build signed release APK
+        run: |
+          set -e
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleRelease --no-daemon --stacktrace
+
+      - name: Verify APK signature
+        run: |
+          set -e
+          APK=$(find android/app/build/outputs/apk/release -name "*.apk" | head -n 1)
+          echo "APK: $APK"
+          APKSIGNER=$(find "$ANDROID_HOME/build-tools" -name apksigner | sort | tail -n 1)
+          "$APKSIGNER" verify --print-certs "$APK"
+          mkdir -p dist
+          cp "$APK" "dist/$APK_NAME"
+
+      - name: Upload signed APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: review-plan-signed-apk
+          path: dist/${{ env.APK_NAME }}
+          if-no-files-found: error
+          retention-days: 30
