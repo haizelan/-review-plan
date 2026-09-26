@@ -536,29 +536,44 @@
     return { added: added, updated: updated };
   }
 
-  function importJSON(file) {
+function importJSON(file) {
     var reader = new FileReader();
-    reader.onload = function () {
-      var parsed;
-      try {
-        parsed = JSON.parse(String(reader.result));
-      } catch (e) {
-        window.alert('导入失败：不是有效的 JSON 文件。');
-        return;
-      }
-      var list = parsed && (Array.isArray(parsed) ? parsed : parsed.items);
-      if (!Array.isArray(list)) {
-        window.alert('导入失败：文件里没有 items 数据。');
-        return;
-      }
-      var res = mergeItems(list);
-      save();
-      render();
-      window.alert('导入完成：新增 ' + res.added + ' 条，更新 ' + res.updated + ' 条。');
+    reader.onload = function(e) {
+        try {
+            var data = JSON.parse(e.target.result);
+            if (!Array.isArray(data)) throw new Error('格式不对');
+            
+            // 核心：弹窗问你，用哪种模式导入
+            var isOverwrite = confirm('点击【确定】执行“完全覆盖”（推荐，同步删除操作，不会复活已删条目）。\n点击【取消】执行“智能合并”（两边数据相加，适合两边都加了新内容时）。');
+            
+            if (isOverwrite) {
+                // 完全覆盖模式：直接替换，删掉的条目就彻底没了
+                state.items = data; 
+            } else {
+                // 智能合并模式：保留双方数据，但可能会复活已删条目
+                if (typeof mergeItems === 'function') {
+                    mergeItems(data);
+                } else {
+                    // 备用合并逻辑（如果mergeItems未定义）
+                    data.forEach(function(raw) {
+                        var old = state.items.find(function(i) { return i.id === raw.id; });
+                        if (!old) state.items.push(raw);
+                        else if (String(raw.updatedAt) > String(old.updatedAt)) Object.assign(old, raw);
+                    });
+                }
+            }
+            
+            // 保存并刷新页面
+            if (typeof save === 'function') save();
+            if (typeof render === 'function') render();
+            alert('导入成功！');
+            
+        } catch (err) {
+            alert('导入失败：' + err.message);
+        }
     };
-    reader.onerror = function () { window.alert('导入失败：无法读取文件。'); };
     reader.readAsText(file);
-  }
+}
 
   /* ---------- 通知提醒 ---------- */
   function updateNotifyState() {
