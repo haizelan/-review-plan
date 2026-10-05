@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>复习计划单</title>
+<meta name="theme-color" content="#7fb2e5">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="复习计划单">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  :root {
+    --blue: #6aa8e0;
+    --blue-dark: #3f80c4;
+    --blue-soft: #eaf3fc;
+    --ink: #2c3a47;
+    --muted: #7b8b9a;
+    --line: #dbe7f3;
+    --bg: #f4f9ff;
+    --white: #ffffff;
+    --danger: #e2726e;
+    --ok: #4caf8f;
+  }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    background: linear-gradient(180deg, #eaf4ff 0%, var(--bg) 320px);
+    color: var(--ink);
+    line-height: 1.6;
+    min-height: 100vh;
+    padding: 0 12px calc(28px + env(safe-area-inset-bottom));
+    -webkit-text-size-adjust: 100%;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; }
+  header {
+    text-align: center;
+    padding: 26px 4px 14px;
+    position: relative;
+  }
+  .gear {
+    position: absolute;
+    top: 10px;
+    right: 0;
+    font-size: 13px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: var(--white);
+  }
+  .sync-line {
+    text-align: center;
+    font-size: 11.5px;
+    margin: -8px 0 14px;
+    color: var(--muted);
+    word-break: break-all;
+  }
+  .sync-ok { color: var(--ok); }
+  .sync-err { color: var(--danger); }
+  .sync-busy { color: var(--blue-dark); }
+  header img {
+    width: 62px; height: 62px;
+    border-radius: 18px;
+    box-shadow: 0 6px 18px rgba(90, 150, 210, .28);
+    display: block;
+    margin: 0 auto 10px;
+  }
+  header h1 {
+    font-size: 22px;
+    margin: 0;
+    letter-spacing: .06em;
+    color: var(--blue-dark);
+  }
+  header p {
+    margin: 4px 0 0;
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: .08em;
+  }
+  .stats {
+    display: flex;
+    gap: 10px;
+    margin: 14px 0 18px;
+  }
+  .stat {
+    flex: 1;
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 10px 8px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(120, 170, 215, .10);
+  }
+  .stat b { display: block; font-size: 20px; color: var(--blue-dark); line-height: 1.3; }
+  .stat span { font-size: 11px; color: var(--muted); }
+  section.card {
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 14px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 10px rgba(120, 170, 215, .10);
+  }
+  h2 {
+    font-size: 15px;
+    margin: 0 0 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    color: var(--blue-dark);
+    letter-spacing: .04em;
+  }
+  h2 .count {
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--muted);
+    background: var(--blue-soft);
+    border-radius: 999px;
+    padding: 2px 10px;
+  }
+  label { display: block; font-size: 12px; color: var(--muted); margin: 0 0 4px; }
+  input[type="text"], input[type="password"], input[type="email"], textarea, select {
+    width: 100%;
+    font: inherit;
+    font-size: 15px;
+    color: var(--ink);
+    background: #fbfdff;
+    border: 1px solid var(--line);
+    border-radius: 11px;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+    outline: none;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  input[type="text"]:focus, input[type="password"]:focus, input[type="email"]:focus, textarea:focus, select:focus {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 3px rgba(106, 168, 224, .18);
+  }
+  textarea { min-height: 76px; resize: vertical; }
+  .btn {
+    font: inherit;
+    font-size: 15px;
+    border: 1px solid var(--line);
+    background: var(--white);
+    color: var(--ink);
+    border-radius: 11px;
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: transform .08s, background .15s, border-color .15s;
+  }
+  .btn:active { transform: scale(.97); }
+  .btn.primary {
+    background: linear-gradient(135deg, #7fb8ea, var(--blue-dark));
+    border-color: var(--blue-dark);
+    color: #fff;
+    font-weight: 600;
+  }
+  .btn.full { width: 100%; }
+  .btn.ghost { background: var(--blue-soft); border-color: #cfe3f7; color: var(--blue-dark); }
+  .btn.danger { color: var(--danger); border-color: #f4d7d6; background: #fdf6f6; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .row > .btn { flex: 1; min-width: 110px; }
+  ul.list { list-style: none; margin: 0; padding: 0; }
+  li.item {
+    border: 1px solid var(--line);
+    border-radius: 13px;
+    padding: 12px;
+    margin-bottom: 10px;
+    background: #fdfeff;
+  }
+  li.item:last-child { margin-bottom: 0; }
+  li.item.due { border-color: #bcdcf7; background: linear-gradient(180deg, #f6fbff, #ffffff); }
+  .item-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .item-title { font-size: 15px; font-weight: 600; word-break: break-word; }
+  .item-body {
+    font-size: 13.5px;
+    color: #4b5b69;
+    white-space: pre-wrap;
+    word-break: break-word;
+    margin: 6px 0 0;
+  }
+  .tag {
+    flex: 0 0 auto;
+    font-size: 11px;
+    border-radius: 999px;
+    padding: 2px 9px;
+    background: var(--blue-soft);
+    color: var(--blue-dark);
+    white-space: nowrap;
+  }
+  .tag.warn { background: #fdf0e4; color: #c17d34; }
+  .tag.done { background: #e8f6f0; color: var(--ok); }
+  .meta { font-size: 11.5px; color: var(--muted); margin-top: 8px; }
+  .item-actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+  .item-actions .btn { flex: 1; padding: 9px 10px; font-size: 14px; }
+  .empty {
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+    padding: 18px 6px;
+    border: 1px dashed var(--line);
+    border-radius: 13px;
+  }
+  footer {
+    text-align: center;
+    font-size: 11px;
+    color: var(--muted);
+    padding: 6px 0 10px;
+    letter-spacing: .04em;
+  }
+  .hidden { display: none !important; }
+  .modal-mask {
+    position: fixed;
+    top: 0; right: 0; bottom: 0; left: 0;
+    background: rgba(30, 50, 70, .40);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    z-index: 50;
+  }
+  .modal {
+    background: var(--white);
+    border-radius: 18px;
+    padding: 16px;
+    width: 100%;
+    max-width: 460px;
+    max-height: 88vh;
+    overflow: auto;
+    box-shadow: 0 18px 50px rgba(40, 70, 100, .30);
+  }
+  .modal h2 { margin-bottom: 10px; }
+  .modal-x {
+    border: none;
+    background: transparent;
+    font-size: 22px;
+    line-height: 1;
+    color: var(--muted);
+    cursor: pointer;
+    padding: 0 4px;
+  }
+  .checkline {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--muted);
+    margin: 0 0 12px;
+  }
+  .checkline input { width: auto; margin: 0; }
+  @media (max-width: 420px) {
+    header h1 { font-size: 20px; }
+    .row > .btn { min-width: 92px; font-size: 14px; padding: 10px 8px; }
+    .item-actions .btn { font-size: 13px; }
+    .gear { top: 6px; font-size: 12px; padding: 5px 10px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <button class="btn gear" id="settingsBtn" type="button">⚙️ 设置</button>
+    <img src="icon-192.png" alt="复习计划单">
+    <h1>复习计划单</h1>
+    <p>1 · 3 · 7 · 14 · 30 · 60 天科学复习</p>
+  </header>
+
+  <div class="sync-line" id="syncStatus">云端同步：未配置</div>
+
+  <div class="stats">
+    <div class="stat"><b id="statToday">0</b><span>今日待复习</span></div>
+    <div class="stat"><b id="statAll">0</b><span>全部条目</span></div>
+    <div class="stat"><b id="statDone">0</b><span>已掌握</span></div>
+  </div>
+
+  <section class="card" id="todayCard">
+    <h2>今天要复习 <span class="count" id="todayCount">0 条</span></h2>
+    <div id="todayList"></div>
+  </section>
+
+  <section class="card">
+    <h2>添加学习条目</h2>
+    <label for="titleInput">标题</label>
+    <input type="text" id="titleInput" placeholder="例如：英语单词 Unit 3" maxlength="80" autocomplete="off">
+    <label for="contentInput">内容</label>
+    <textarea id="contentInput" placeholder="写下要复习的知识点、题目或笔记……" maxlength="4000"></textarea>
+    <button class="btn primary full" id="addBtn">添加（1 天后首次复习）</button>
+  </section>
+
+  <section class="card">
+    <h2>全部条目 <span class="count" id="allCount">0 条</span></h2>
+    <div id="allList"></div>
+  </section>
+
+  <section class="card">
+    <h2>数据与提醒</h2>
+    <div class="row">
+      <button class="btn ghost" id="syncBtn">立即同步</button>
+      <button class="btn ghost" id="exportBtn">导出 JSON（本地备份）</button>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <button class="btn" id="notifyBtn">开启今日提醒</button>
+    </div>
+    <div class="meta" id="notifyState">提醒状态：未开启</div>
+  </section>
+
+  <footer id="footer">数据保存在本机，并自动同步到你的 Supabase</footer>
+</div>
+
+<!-- 设置弹窗：Supabase 配置与登录（密钥只存本机 localStorage，绝不写死在代码里） -->
+<div class="modal-mask hidden" id="settingsMask">
+  <div class="modal">
+    <h2>云端同步设置 <button class="modal-x" id="settingsClose" type="button">×</button></h2>
+    <label for="cfgUrl">Supabase URL</label>
+    <input type="text" id="cfgUrl" placeholder="https://xxxxxxxx.supabase.co" autocomplete="off" spellcheck="false">
+    <label for="cfgKey">Supabase Anon Key</label>
+    <textarea id="cfgKey" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." spellcheck="false"></textarea>
+    <label for="cfgEmail">登录邮箱</label>
+    <input type="text" id="cfgEmail" placeholder="你的QQ邮箱@qq.com" autocomplete="off" spellcheck="false">
+    <label for="cfgPassword">密码</label>
+    <input type="password" id="cfgPassword" placeholder="Supabase 里创建的账号密码" autocomplete="current-password">
+    <label class="checkline"><input type="checkbox" id="cfgRemember"> 在本机记住密码（只存在本机 localStorage，用于自动登录）</label>
+    <div class="row">
+      <button class="btn primary" id="cfgLogin" type="button">保存并登录</button>
+      <button class="btn ghost" id="cfgSaveOnly" type="button">仅保存配置</button>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <button class="btn ghost" id="cfgSync" type="button">立即同步</button>
+      <button class="btn danger" id="cfgLogout" type="button">退出登录</button>
+    </div>
+    <div class="meta" id="cfgHint">提示：Supabase 后台关闭「邮箱确认」后，用这里的邮箱+密码即可登录；本工具不提供注册入口。</div>
+  </div>
+</div>
+
+<!-- 编辑弹窗：修改已有条目的标题与内容 -->
+<div class="modal-mask hidden" id="editMask">
+  <div class="modal">
+    <h2>编辑条目 <button class="modal-x" id="editClose" type="button">×</button></h2>
+    <label for="editTitle">标题</label>
+    <input type="text" id="editTitle" maxlength="80" autocomplete="off" placeholder="标题">
+    <label for="editContent">内容</label>
+    <textarea id="editContent" maxlength="4000" placeholder="内容"></textarea>
+    <div class="row">
+      <button class="btn primary" id="editSave" type="button">保存修改</button>
+      <button class="btn ghost" id="editCancel" type="button">取消</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function () {
+  'use strict';
+
+  var STORAGE_KEY = 'review-plan-v1:data';
+  var NOTIFY_KEY = 'review-plan-v1:notified';
+  var CLOUD_CFG_KEY = 'review-plan-v1:cloud';
+  var TABLE = 'review_items';
+  var INTERVALS = [1, 3, 7, 14, 30, 60];
+  var LABELS = ['1天', '3天', '7天', '14天', '30天', '60天'];
+
+  /* ---------- 日期工具 ---------- */
+  function pad(n) { return n < 10 ? '0' + n : '' + n; }
+  function toDateStr(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+  function todayStr() { return toDateStr(new Date()); }
+  function parseDate(s) {
+    var p = String(s).split('-');
+    return new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+  }
+  function addDays(dateStr, n) {
+    var d = parseDate(dateStr);
+    d.setDate(d.getDate() + n);
+    return toDateStr(d);
+  }
+  function diffDays(dateStr) {
+    var t = new Date();
+    var base = new Date(t.getFullYear(), t.getMonth(), t.getDate());
+    return Math.round((parseDate(dateStr) - base) / 86400000);
+  }
+  function dueText(dateStr) {
+    if (!dateStr) return '已掌握';
+    var n = diffDays(dateStr);
+    if (n === 0) return '今天到期';
+    if (n === 1) return '明天到期';
+    if (n > 1) return n + ' 天后到期';
+    return '已逾期 ' + Math.abs(n) + ' 天';
+  }
+
+  function timeStr(iso) {
+    try {
+      return new Date(iso).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+    } catch (e) {
+      return '';
+    }
+  }
+
+  /* ---------- 数据层 ---------- */
+  var state = { items: [] };
+
+  function load() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      var data = JSON.parse(raw);
+      if (data && Array.isArray(data.items)) {
+        state.items = data.items.map(normalize);
+      }
+    } catch (e) {
+      state.items = [];
+    }
+  }
+
+  function normalize(it) {
+    it = it || {};
+    var stage = Number(it.stage);
+    if (isNaN(stage) || stage < 0) stage = 0;
+    if (stage > INTERVALS.length - 1) stage = INTERVALS.length - 1;
+    return {
+      id: it.id || uid(),
+      title: String(it.title == null ? '' : it.title),
+      content: String(it.content == null ? '' : it.content),
+      createdAt: it.createdAt || new Date().toISOString(),
+      updatedAt: it.updatedAt || it.createdAt || new Date().toISOString(),
+      stage: stage,
+      nextReview: it.done ? null : (it.nextReview || addDays(todayStr(), INTERVALS[stage])),
+      done: !!it.done,
+      deleted: !!it.deleted,
+      history: Array.isArray(it.history) ? it.history : []
+    };
+  }
+
+  function save() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+  }
+
+  function uid() {
+    return 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  }
+
+  /* ---------- 业务操作 ---------- */
+  function addItem(title, content) {
+    var now = new Date().toISOString();
+    var item = {
+      id: uid(),
+      title: title,
+      content: content,
+      createdAt: now,
+      updatedAt: now,
+      stage: 0,
+      nextReview: addDays(todayStr(), INTERVALS[0]),
+      done: false,
+      deleted: false,
+      history: []
+    };
+    state.items.unshift(item);
+    save();
+    render();
+    pushItem(item.id);
+  }
+
+  function remember(id) {
+    var it = find(id);
+    if (!it) return;
+    var now = new Date().toISOString();
+    it.history.push({ at: now, result: 'remember', stage: it.stage });
+    if (it.stage >= INTERVALS.length - 1) {
+      it.done = true;
+      it.nextReview = null;
+    } else {
+      it.stage = it.stage + 1;
+      it.nextReview = addDays(todayStr(), INTERVALS[it.stage]);
+    }
+    it.updatedAt = now;
+    it.deleted = false;
+    save();
+    render();
+    pushItem(id);
+  }
+
+  function forget(id) {
+    var it = find(id);
+    if (!it) return;
+    var now = new Date().toISOString();
+    it.history.push({ at: now, result: 'forget', stage: it.stage });
+    it.done = false;
+    it.stage = 0;
+    it.nextReview = addDays(todayStr(), INTERVALS[0]);
+    it.updatedAt = now;
+    it.deleted = false;
+    save();
+    render();
+    pushItem(id);
+  }
+
+  function reopen(id) {
+    var it = find(id);
+    if (!it) return;
+    it.done = false;
+    it.stage = 0;
+    it.nextReview = addDays(todayStr(), INTERVALS[0]);
+    it.updatedAt = new Date().toISOString();
+    it.deleted = false;
+    save();
+    render();
+    pushItem(id);
+  }
+
+  function remove(id) {
+    var it = find(id);
+    if (!it) return;
+    if (!window.confirm('确定删除「' + it.title + '」吗？')) return;
+    // 软删除：保留墓碑记录并同步到云端，避免另一台设备把已删条目同步回来
+    it.deleted = true;
+    it.updatedAt = new Date().toISOString();
+    save();
+    render();
+    pushItem(id);
+  }
+
+  function find(id) {
+    for (var i = 0; i < state.items.length; i++) {
+      if (state.items[i].id === id) return state.items[i];
+    }
+    return null;
+  }
+
+  function visibleItems() {
+    return state.items.filter(function (it) { return !it.deleted; });
+  }
+
+  function todayItems() {
+    var t = todayStr();
+    return visibleItems().filter(function (it) {
+      return !it.done && it.nextReview && it.nextReview <= t;
+    }).sort(function (a, b) { return a.nextReview < b.nextReview ? -1 : 1; });
+  }
+
+  function allItems() {
+    return visibleItems().sort(function (a, b) {
+      if (a.done !== b.done) return a.done ? 1 : -1;
+      var x = a.nextReview || '9999-99-99';
+      var y = b.nextReview || '9999-99-99';
+      return x < y ? -1 : (x > y ? 1 : 0);
+    });
+  }
+
+  /* ---------- 渲染 ---------- */
+  function el(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
+  }
+
+  function stageTag(it) {
+    if (it.done) return el('span', 'tag done', '已掌握');
+    var isDue = it.nextReview && it.nextReview <= todayStr();
+    var tag = el('span', 'tag' + (isDue ? ' warn' : ''), '间隔 ' + LABELS[it.stage]);
+    return tag;
+  }
+
+  function buildItem(it, showActions) {
+    var li = el('li', 'item' + (it.nextReview && it.nextReview <= todayStr() && !it.done ? ' due' : ''));
+
+    var head = el('div', 'item-head');
+    head.appendChild(el('div', 'item-title', it.title || '（无标题）'));
+    head.appendChild(stageTag(it));
+    li.appendChild(head);
+
+    if (it.content) li.appendChild(el('div', 'item-body', it.content));
+
+    var meta = '下次复习：' + dueText(it.nextReview) + (it.nextReview ? '（' + it.nextReview + '）' : '');
+    li.appendChild(el('div', 'meta', meta));
+
+    if (showActions) {
+      var acts = el('div', 'item-actions');
+      if (it.done) {
+        var again = el('button', 'btn ghost', '重新开始');
+        again.type = 'button';
+        again.addEventListener('click', function () { reopen(it.id); });
+        acts.appendChild(again);
+      } else {
+        var ok = el('button', 'btn primary', '记住了');
+        ok.type = 'button';
+        ok.addEventListener('click', function () { remember(it.id); });
+        var no = el('button', 'btn', '忘了');
+        no.type = 'button';
+        no.addEventListener('click', function () { forget(it.id); });
+        acts.appendChild(ok);
+        acts.appendChild(no);
+      }
+      var edit = el('button', 'btn ghost', '编辑');
+      edit.type = 'button';
+      edit.addEventListener('click', function () { openEdit(it.id); });
+      acts.appendChild(edit);
+      var del = el('button', 'btn danger', '删除');
+      del.type = 'button';
+      del.addEventListener('click', function () { remove(it.id); });
+      acts.appendChild(del);
+      li.appendChild(acts);
+    }
+    return li;
+  }
+
+  function fill(container, items, showActions, emptyText) {
+    container.textContent = '';
+    if (!items.length) {
+      container.appendChild(el('div', 'empty', emptyText));
+      return;
+    }
+    var ul = el('ul', 'list');
+    items.forEach(function (it) { ul.appendChild(buildItem(it, showActions)); });
+    container.appendChild(ul);
+  }
+
+  function render() {
+    var due = todayItems();
+    var all = visibleItems();
+    var doneCount = all.filter(function (i) { return i.done; }).length;
+
+    document.getElementById('statToday').textContent = due.length;
+    document.getElementById('statAll').textContent = all.length;
+    document.getElementById('statDone').textContent = doneCount;
+    document.getElementById('todayCount').textContent = due.length + ' 条';
+    document.getElementById('allCount').textContent = all.length + ' 条';
+
+    fill(document.getElementById('todayList'), due, true,
+      due.length ? '' : '今天没有需要复习的内容，休息一下吧 🌿');
+    fill(document.getElementById('allList'), allItems(), true,
+      '还没有条目，先在上面添加一条吧。');
+  }
+
+  /* ---------- 导出（本地备份） ---------- */
+  function exportJSON() {
+    var payload = {
+      app: '复习计划单',
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      items: visibleItems()
+    };
+    var blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = '复习计划单-' + todayStr() + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
+  }
+
+  /* ---------- 云端同步（Supabase） ---------- */
+  var cloud = { client: null, clientUrl: '', clientKey: '', url: '', anonKey: '', email: '', password: '', user: null, syncing: false, timer: null };
+
+  function loadCloudCfg() {
+    try {
+      var raw = localStorage.getItem(CLOUD_CFG_KEY);
+      if (!raw) return;
+      var cfg = JSON.parse(raw);
+      cloud.url = cfg.url || '';
+      cloud.anonKey = cfg.anonKey || '';
+      cloud.email = cfg.email || '';
+      cloud.password = cfg.password || '';
+    } catch (e) {}
+  }
+
+  function saveCloudCfg() {
+    try {
+      localStorage.setItem(CLOUD_CFG_KEY, JSON.stringify({
+        url: cloud.url,
+        anonKey: cloud.anonKey,
+        email: cloud.email,
+        password: cloud.password
+      }));
+    } catch (e) {}
+  }
+
+  function setSync(text, kind) {
+    var box = document.getElementById('syncStatus');
+    if (!box) return;
+    box.textContent = '云端同步：' + text;
+    box.className = 'sync-line sync-' + (kind || 'idle');
+  }
+
+  function initCloudClient() {
+    if (!cloud.url || !cloud.anonKey) {
+      setSync('未配置（点右上角 ⚙️ 设置）', 'idle');
+      return false;
+    }
+    if (!window.supabase) {
+      setSync('Supabase SDK 未加载（请检查网络）', 'err');
+      return false;
+    }
+    if (cloud.client && cloud.clientUrl === cloud.url && cloud.clientKey === cloud.anonKey) return true;
+    try {
+      cloud.client = window.supabase.createClient(cloud.url, cloud.anonKey, {
+        auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false }
+      });
+      cloud.clientUrl = cloud.url;
+      cloud.clientKey = cloud.anonKey;
+      return true;
+    } catch (e) {
+      cloud.client = null;
+      setSync('初始化失败：' + (e && e.message ? e.message : e), 'err');
+      return false;
+    }
+  }
+
+  function rowFromItem(it, userId) {
+    return {
+      id: it.id,
+      user_id: userId,
+      title: it.title || '',
+      content: it.content || '',
+      stage: Number(it.stage) || 0,
+      next_review: it.nextReview || null,
+      done: !!it.done,
+      deleted: !!it.deleted,
+      history: Array.isArray(it.history) ? it.history : [],
+      created_at: it.createdAt || new Date().toISOString(),
+      updated_at: it.updatedAt || new Date().toISOString()
+    };
+  }
+
+  function itemFromRow(r) {
+    return normalize({
+      id: r.id,
+      title: r.title,
+      content: r.content,
+      createdAt: r.created_at,
+      updatedAt: r.updated_at,
+      stage: r.stage,
+      nextReview: r.next_review,
+      done: r.done,
+      deleted: r.deleted,
+      history: r.history
+    });
+  }
+
+  function pushAll() {
+    if (!cloud.user || !cloud.client) return Promise.resolve();
+    var rows = state.items.map(function (it) { return rowFromItem(it, cloud.user.id); });
+    if (!rows.length) return Promise.resolve();
+    return cloud.client.from(TABLE).upsert(rows, { onConflict: 'id' }).then(function (res) {
+      if (res.error) throw res.error;
+    });
+  }
+
+  function pullAll() {
+    if (!cloud.user || !cloud.client) return Promise.resolve(0);
+    return cloud.client.from(TABLE).select('*').then(function (res) {
+      if (res.error) throw res.error;
+      return mergeRemote(res.data || []);
+    });
+  }
+
+  // 逐条按 updatedAt「后写覆盖」，让手机与电脑保持一致
+  function mergeRemote(rows) {
+    var map = {};
+    var order = [];
+    state.items.forEach(function (it) {
+      map[it.id] = it;
+      order.push(it.id);
+    });
+    var changed = 0;
+    rows.forEach(function (r) {
+      var remote = itemFromRow(r);
+      var local = map[remote.id];
+      if (!local) {
+        map[remote.id] = remote;
+        order.push(remote.id);
+        changed++;
+      } else if (String(remote.updatedAt) > String(local.updatedAt)) {
+        map[remote.id] = remote;
+        changed++;
+      }
+    });
+    state.items = order.map(function (id) { return map[id]; });
+    return changed;
+  }
+
+  function syncNow() {
+    if (!cloud.user || !cloud.client) {
+      setSync('未登录（点右上角 ⚙️ 设置）', 'idle');
+      return Promise.resolve();
+    }
+    if (cloud.syncing) return Promise.resolve();
+    cloud.syncing = true;
+    setSync('同步中…', 'busy');
+    return pushAll()
+      .then(pullAll)
+      .then(function (changed) {
+        save();
+        render();
+        setSync('已同步 ' + timeStr(new Date().toISOString()) + (changed ? '（更新 ' + changed + ' 条）' : ''), 'ok');
+      })
+      .catch(function (e) {
+        setSync('同步失败：' + (e && e.message ? e.message : e), 'err');
+      })
+      .then(function () {
+        cloud.syncing = false;
+      });
+  }
+
+  // 每次添加 / 修改 / 复习操作后，把这一条立即推送到云端
+  function pushItem(id) {
+    if (!cloud.user || !cloud.client) return;
+    var it = find(id);
+    if (!it) return;
+    cloud.client.from(TABLE).upsert(rowFromItem(it, cloud.user.id), { onConflict: 'id' }).then(function (res) {
+      if (res.error) {
+        setSync('上传失败：' + res.error.message, 'err');
+        return;
+      }
+      setSync('已同步 ' + timeStr(new Date().toISOString()), 'ok');
+    }).catch(function (e) {
+      setSync('上传失败：' + (e && e.message ? e.message : e), 'err');
+    });
+  }
+
+  function signIn(email, password) {
+    return cloud.client.auth.signInWithPassword({ email: email, password: password }).then(function (res) {
+      if (res.error) throw res.error;
+      cloud.user = res.data.user;
+      setSync('已登录 ' + cloud.user.email, 'ok');
+      return syncNow();
+    });
+  }
+
+  function autoLogin() {
+    if (!cloud.email || !cloud.password || !cloud.client) {
+      setSync('未登录（点右上角 ⚙️ 设置）', 'idle');
+      return;
+    }
+    setSync('正在自动登录…', 'busy');
+    signIn(cloud.email, cloud.password).catch(function (e) {
+      setSync('自动登录失败：' + (e && e.message ? e.message : e) + '，请点右上角 ⚙️ 重新登录', 'err');
+    });
+  }
+
+  function signOutCloud() {
+    cloud.user = null;
+    if (!cloud.client) { setSync('已退出登录', 'idle'); return; }
+    cloud.client.auth.signOut().then(function () {
+      setSync('已退出登录', 'idle');
+    }).catch(function () {
+      setSync('已退出登录', 'idle');
+    });
+  }
+
+  function startCloud() {
+    loadCloudCfg();
+    fillSettingsForm();
+    if (!cloud.url || !cloud.anonKey) {
+      setSync('未配置（点右上角 ⚙️ 设置）', 'idle');
+      return;
+    }
+    if (!initCloudClient()) return;
+    setSync('正在连接…', 'busy');
+    cloud.client.auth.getSession().then(function (res) {
+      var session = res && res.data ? res.data.session : null;
+      if (session && session.user) {
+        cloud.user = session.user;
+        setSync('已登录 ' + session.user.email, 'ok');
+        return syncNow();
+      }
+      return autoLogin();
+    }).catch(function (e) {
+      setSync('连接失败：' + (e && e.message ? e.message : e), 'err');
+    });
+
+    cloud.client.auth.onAuthStateChange(function (evt, session) {
+      cloud.user = session && session.user ? session.user : null;
+    });
+
+    if (cloud.timer) clearInterval(cloud.timer);
+    cloud.timer = setInterval(function () {
+      if (cloud.user && !document.hidden) syncNow();
+    }, 60000);
+  }
+
+  /* ---------- 设置弹窗 ---------- */
+  function fillSettingsForm() {
+    document.getElementById('cfgUrl').value = cloud.url || '';
+    document.getElementById('cfgKey').value = cloud.anonKey || '';
+    document.getElementById('cfgEmail').value = cloud.email || '';
+    document.getElementById('cfgPassword').value = cloud.password || '';
+    document.getElementById('cfgRemember').checked = !!cloud.password;
+  }
+
+  function readSettingsForm() {
+    cloud.url = document.getElementById('cfgUrl').value.trim().replace(/\/+$/, '');
+    cloud.anonKey = document.getElementById('cfgKey').value.trim();
+    cloud.email = document.getElementById('cfgEmail').value.trim();
+    var pwd = document.getElementById('cfgPassword').value;
+    cloud.password = document.getElementById('cfgRemember').checked ? pwd : '';
+    saveCloudCfg();
+  }
+
+  function openSettings() {
+    fillSettingsForm();
+    document.getElementById('settingsMask').classList.remove('hidden');
+  }
+
+  function closeSettings() {
+    document.getElementById('settingsMask').classList.add('hidden');
+  }
+
+  function settingsLogin() {
+    readSettingsForm();
+    if (!cloud.url || !cloud.anonKey) { window.alert('请先填写 Supabase URL 和 Anon Key。'); return; }
+    if (cloud.url.indexOf('http') !== 0) { window.alert('Supabase URL 必须以 http 开头。'); return; }
+    var pwd = document.getElementById('cfgPassword').value;
+    if (!cloud.email || !pwd) { window.alert('请填写登录邮箱和密码。'); return; }
+    cloud.client = null;
+    cloud.clientUrl = '';
+    cloud.clientKey = '';
+    if (!initCloudClient()) return;
+    setSync('正在登录…', 'busy');
+    signIn(cloud.email, pwd).then(function () {
+      closeSettings();
+    }).catch(function (e) {
+      var msg = e && e.message ? e.message : String(e);
+      setSync('登录失败：' + msg, 'err');
+      window.alert('登录失败：' + msg + '\n\n常见原因：邮箱未确认、密码错误、或 Supabase 里还没有这个用户。');
+    });
+  }
+
+  function settingsSaveOnly() {
+    readSettingsForm();
+    cloud.client = null;
+    cloud.clientUrl = '';
+    cloud.clientKey = '';
+    if (cloud.url && cloud.anonKey) {
+      if (initCloudClient()) setSync('配置已保存（可以点「保存并登录」）', 'ok');
+    } else {
+      setSync('未配置（点右上角 ⚙️ 设置）', 'idle');
+    }
+    window.alert('配置已保存在本机 localStorage。');
+  }
+
+  /* ---------- 编辑条目（标题 / 内容） ---------- */
+  var editId = null;
+
+  function openEdit(id) {
+    var it = find(id);
+    if (!it) return;
+    editId = id;
+    document.getElementById('editTitle').value = it.title || '';
+    document.getElementById('editContent').value = it.content || '';
+    document.getElementById('editMask').classList.remove('hidden');
+    setTimeout(function () {
+      var t = document.getElementById('editTitle');
+      try { t.focus(); } catch (e) {}
+    }, 50);
+  }
+
+  function closeEdit() {
+    editId = null;
+    document.getElementById('editMask').classList.add('hidden');
+  }
+
+  function saveEdit() {
+    if (!editId) { closeEdit(); return; }
+    var it = find(editId);
+    if (!it) { closeEdit(); return; }
+    var title = document.getElementById('editTitle').value.trim();
+    var content = document.getElementById('editContent').value.trim();
+    if (!title && !content) {
+      window.alert('标题和内容不能同时为空。');
+      return;
+    }
+    it.title = title || content.slice(0, 20);
+    it.content = content;
+    it.updatedAt = new Date().toISOString();
+    save();
+    render();
+    pushItem(it.id); // 自动推送到 Supabase（review_items 表 upsert）
+    closeEdit();
+  }
+
+  /* ---------- 通知提醒 ---------- */
+  function updateNotifyState() {
+    var box = document.getElementById('notifyState');
+    if (!('Notification' in window)) {
+      box.textContent = '提醒状态：当前浏览器不支持通知';
+      document.getElementById('notifyBtn').disabled = true;
+      return;
+    }
+    var p = Notification.permission;
+    box.textContent = '提醒状态：' + (p === 'granted' ? '已开启（打开页面时提醒今日复习）' : (p === 'denied' ? '已被浏览器拒绝，请在设置中允许' : '未开启'));
+    document.getElementById('notifyBtn').textContent = p === 'granted' ? '发送今日提醒' : '开启今日提醒';
+  }
+
+  function notifyToday(force) {
+    if (!('Notification' in window)) return;
+    if (Notification.permission !== 'granted') return;
+    var due = todayItems();
+    if (!due.length) {
+      if (force) window.alert('今天没有需要复习的内容。');
+      return;
+    }
+    if (!force && localStorage.getItem(NOTIFY_KEY) === todayStr()) return;
+    try {
+      var body = '今天有 ' + due.length + ' 条内容需要复习：' + due.slice(0, 3).map(function (i) { return i.title; }).join('、') + (due.length > 3 ? ' 等' : '');
+      var n = new Notification('复习计划单', { body: body, icon: 'icon-192.png', tag: 'review-plan-today' });
+      n.onclick = function () { window.focus(); n.close(); };
+    } catch (e) {}
+    localStorage.setItem(NOTIFY_KEY, todayStr());
+  }
+
+  function askNotify() {
+    if (!('Notification' in window)) { window.alert('当前浏览器不支持通知。'); return; }
+    if (Notification.permission === 'granted') { notifyToday(true); return; }
+    Notification.requestPermission().then(function () {
+      updateNotifyState();
+      notifyToday(true);
+    });
+  }
+
+  /* ---------- 事件绑定 ---------- */
+  function bind() {
+    document.getElementById('addBtn').addEventListener('click', function () {
+      var t = document.getElementById('titleInput');
+      var c = document.getElementById('contentInput');
+      var title = t.value.trim();
+      var content = c.value.trim();
+      if (!title && !content) {
+        window.alert('请先填写标题或内容。');
+        t.focus();
+        return;
+      }
+      addItem(title || content.slice(0, 20), content);
+      t.value = '';
+      c.value = '';
+      t.focus();
+    });
+
+    document.getElementById('exportBtn').addEventListener('click', exportJSON);
+    document.getElementById('syncBtn').addEventListener('click', function () { syncNow(); });
+    document.getElementById('notifyBtn').addEventListener('click', askNotify);
+
+    document.getElementById('settingsBtn').addEventListener('click', openSettings);
+    document.getElementById('settingsClose').addEventListener('click', closeSettings);
+    document.getElementById('settingsMask').addEventListener('click', function (e) {
+      if (e.target === document.getElementById('settingsMask')) closeSettings();
+    });
+    document.getElementById('cfgLogin').addEventListener('click', settingsLogin);
+    document.getElementById('cfgSaveOnly').addEventListener('click', settingsSaveOnly);
+    document.getElementById('cfgSync').addEventListener('click', function () {
+      readSettingsForm();
+      if (!cloud.user) { window.alert('请先点「保存并登录」。'); return; }
+      syncNow();
+    });
+    document.getElementById('cfgLogout').addEventListener('click', function () {
+      signOutCloud();
+      closeSettings();
+    });
+
+    document.getElementById('editSave').addEventListener('click', saveEdit);
+    document.getElementById('editCancel').addEventListener('click', closeEdit);
+    document.getElementById('editClose').addEventListener('click', closeEdit);
+    document.getElementById('editMask').addEventListener('click', function (e) {
+      if (e.target === document.getElementById('editMask')) closeEdit();
+    });
+  }
+
+  /* ---------- 启动 ---------- */
+  function init() {
+    load();
+    bind();
+    render();
+    updateNotifyState();
+    startCloud();
+    window.addEventListener('visibilitychange', function () {
+      if (!document.hidden) {
+        render();
+        notifyToday(false);
+        if (cloud.user) syncNow();
+      }
+    });
+    window.addEventListener('online', function () { if (cloud.user) syncNow(); });
+    setTimeout(function () { notifyToday(false); }, 1200);
+    if ('serviceWorker' in navigator && location.protocol.indexOf('http') === 0) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('sw.js').then(function () {
+          var f = document.getElementById('footer');
+          f.textContent = '数据保存在本机，并自动同步到 Supabase · 已支持离线使用';
+        }).catch(function () {});
+      });
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+</body>
+</html>
+
