@@ -60,6 +60,98 @@
   .sync-ok { color: var(--ok); }
   .sync-err { color: var(--danger); }
   .sync-busy { color: var(--blue-dark); }
+  /* 视图切换 */
+  .view-switch { display: flex; gap: 8px; margin: -4px 0 12px; }
+  .view-btn {
+    flex: 1;
+    font: inherit;
+    font-size: 14px;
+    padding: 9px 10px;
+    border-radius: 11px;
+    border: 1px solid var(--line);
+    background: var(--white);
+    color: var(--blue-dark);
+    cursor: pointer;
+    transition: transform .08s, background .15s, border-color .15s;
+  }
+  .view-btn:active { transform: scale(.98); }
+  .view-btn.active {
+    background: linear-gradient(135deg, #7fb8ea, var(--blue-dark));
+    border-color: var(--blue-dark);
+    color: #fff;
+    font-weight: 600;
+  }
+  /* 日历 */
+  .cal-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .cal-title { font-size: 15px; font-weight: 600; color: var(--blue-dark); letter-spacing: .04em; }
+  .cal-nav {
+    border: 1px solid #cfe3f7;
+    background: var(--blue-soft);
+    color: var(--blue-dark);
+    border-radius: 10px;
+    width: 36px;
+    height: 30px;
+    padding: 0;
+    font-size: 17px;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .cal-nav:active { transform: scale(.95); }
+  .cal-week, .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .cal-week { margin-top: 10px; }
+  .cal-week span { text-align: center; font-size: 11px; color: var(--muted); padding-bottom: 2px; }
+  .cal-cell {
+    position: relative;
+    min-height: 40px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    background: #fbfdff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1px;
+    font-size: 13px;
+    color: var(--ink);
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .cal-cell.out { color: #c3cdd7; background: transparent; }
+  .cal-cell.today { border-color: var(--blue-dark); font-weight: 700; color: var(--blue-dark); }
+  .cal-cell.selected { background: linear-gradient(135deg, #7fb8ea, var(--blue-dark)); border-color: var(--blue-dark); color: #fff; }
+  .cal-cell.due { background: #eef6ff; }
+  .cal-cell.selected.due { background: linear-gradient(135deg, #7fb8ea, var(--blue-dark)); }
+  .cal-badge {
+    font-size: 10px;
+    line-height: 1.35;
+    padding: 0 4px;
+    border-radius: 999px;
+    background: var(--blue);
+    color: #fff;
+    white-space: nowrap;
+  }
+  .cal-badge.overdue { background: #eaa365; }
+  .cal-cell.selected .cal-badge { background: rgba(255, 255, 255, .3); }
+  .cal-badge-slot { height: 13px; }
+  .cal-legend {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .cal-legend i {
+    display: inline-block;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--blue);
+    margin-right: -4px;
+  }
+  .cal-legend i.overdue { background: #eaa365; }
+  .cal-today-btn { margin-left: auto; flex: 0 0 auto; min-width: 0; padding: 6px 12px; font-size: 12px; }
   header img {
     width: 62px; height: 62px;
     border-radius: 18px;
@@ -199,7 +291,7 @@
   .tag.warn { background: #fdf0e4; color: #c17d34; }
   .tag.done { background: #e8f6f0; color: var(--ok); }
   .meta { font-size: 11.5px; color: var(--muted); margin-top: 8px; }
-  .item-actions { display: flex; gap: 8px; margin-top: 10px; }
+  .item-actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
   .item-actions .btn { flex: 1; padding: 9px 10px; font-size: 14px; }
   .empty {
     text-align: center;
@@ -273,6 +365,11 @@
     <p>1 · 3 · 7 · 14 · 30 · 60 天科学复习</p>
   </header>
 
+  <div class="view-switch">
+    <button class="view-btn active" id="viewListBtn" type="button">列表模式</button>
+    <button class="view-btn" id="viewCalBtn" type="button">日历模式</button>
+  </div>
+
   <div class="sync-line" id="syncStatus">云端同步：未配置</div>
 
   <div class="stats">
@@ -286,6 +383,31 @@
     <div id="todayList"></div>
   </section>
 
+  <!-- 日历模式：月历（纯手写，无第三方日历库） -->
+  <section class="card hidden" id="calendarCard">
+    <div class="cal-head">
+      <button class="cal-nav" id="calPrev" type="button" aria-label="上个月">‹</button>
+      <span class="cal-title" id="calTitle">—</span>
+      <button class="cal-nav" id="calNext" type="button" aria-label="下个月">›</button>
+    </div>
+    <div class="cal-week">
+      <span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+    <div class="cal-legend">
+      <i></i><span>当天到期</span>
+      <i class="overdue"></i><span>含逾期未复习</span>
+      <button class="btn ghost cal-today-btn" id="calToday" type="button">回到今天</button>
+    </div>
+  </section>
+
+  <!-- 日历模式：选中某一天需要复习的条目 -->
+  <section class="card hidden" id="calDayCard">
+    <h2>这一天要复习 <span class="count" id="calDayCount">0 条</span></h2>
+    <div class="meta" id="calDayTitle" style="margin:-4px 0 10px"></div>
+    <div id="calDayList"></div>
+  </section>
+
   <section class="card">
     <h2>添加学习条目</h2>
     <label for="titleInput">标题</label>
@@ -295,7 +417,7 @@
     <button class="btn primary full" id="addBtn">添加（1 天后首次复习）</button>
   </section>
 
-  <section class="card">
+  <section class="card" id="allCard">
     <h2>全部条目 <span class="count" id="allCount">0 条</span></h2>
     <div id="allList"></div>
   </section>
@@ -337,6 +459,21 @@
       <button class="btn danger" id="cfgLogout" type="button">退出登录</button>
     </div>
     <div class="meta" id="cfgHint">提示：Supabase 后台关闭「邮箱确认」后，用这里的邮箱+密码即可登录；本工具不提供注册入口。</div>
+  </div>
+</div>
+
+<!-- 编辑弹窗：修改已有条目的标题与内容 -->
+<div class="modal-mask hidden" id="editMask">
+  <div class="modal">
+    <h2>编辑条目 <button class="modal-x" id="editClose" type="button">×</button></h2>
+    <label for="editTitle">标题</label>
+    <input type="text" id="editTitle" maxlength="80" autocomplete="off" placeholder="标题">
+    <label for="editContent">内容</label>
+    <textarea id="editContent" maxlength="4000" placeholder="内容"></textarea>
+    <div class="row">
+      <button class="btn primary" id="editSave" type="button">保存修改</button>
+      <button class="btn ghost" id="editCancel" type="button">取消</button>
+    </div>
   </div>
 </div>
 
@@ -582,6 +719,10 @@
         acts.appendChild(ok);
         acts.appendChild(no);
       }
+      var edit = el('button', 'btn ghost', '编辑');
+      edit.type = 'button';
+      edit.addEventListener('click', function () { openEdit(it.id); });
+      acts.appendChild(edit);
       var del = el('button', 'btn danger', '删除');
       del.type = 'button';
       del.addEventListener('click', function () { remove(it.id); });
@@ -602,6 +743,147 @@
     container.appendChild(ul);
   }
 
+  /* ---------- 视图切换 / 日历模式（纯手写，无第三方日历库） ---------- */
+  var viewMode = 'list';                                   // 'list' | 'calendar'
+  var calYear = new Date().getFullYear();
+  var calMonth = new Date().getMonth();                    // 0-11
+  var selectedDate = todayStr();
+
+  function dateStrOf(y, m, d) { return y + '-' + pad(m + 1) + '-' + pad(d); }
+
+  // 某一天需要复习的条目：未掌握 且 nextReview <= 该日期（与「今天要复习」同一口径）
+  function itemsDueOn(dateStr) {
+    return visibleItems().filter(function (it) {
+      return !it.done && it.nextReview && it.nextReview <= dateStr;
+    }).sort(function (a, b) { return a.nextReview < b.nextReview ? -1 : 1; });
+  }
+
+  function setView(mode) {
+    viewMode = (mode === 'calendar') ? 'calendar' : 'list';
+    var isCal = viewMode === 'calendar';
+    document.getElementById('viewListBtn').classList.toggle('active', !isCal);
+    document.getElementById('viewCalBtn').classList.toggle('active', isCal);
+    document.getElementById('todayCard').classList.toggle('hidden', isCal);
+    document.getElementById('allCard').classList.toggle('hidden', isCal);
+    document.getElementById('calendarCard').classList.toggle('hidden', !isCal);
+    document.getElementById('calDayCard').classList.toggle('hidden', !isCal);
+    if (isCal) renderCalendar();
+  }
+
+  function shiftMonth(delta) {
+    calMonth += delta;
+    while (calMonth < 0) { calMonth += 12; calYear -= 1; }
+    while (calMonth > 11) { calMonth -= 12; calYear += 1; }
+    var now = new Date();
+    if (now.getFullYear() === calYear && now.getMonth() === calMonth) {
+      selectedDate = todayStr();
+    } else {
+      selectedDate = dateStrOf(calYear, calMonth, 1);
+    }
+    renderCalendar();
+  }
+
+  function goToday() {
+    var now = new Date();
+    calYear = now.getFullYear();
+    calMonth = now.getMonth();
+    selectedDate = todayStr();
+    renderCalendar();
+  }
+
+  function selectCalDay(dateStr) {
+    selectedDate = dateStr;
+    var d = parseDate(dateStr);
+    calYear = d.getFullYear();
+    calMonth = d.getMonth();
+    renderCalendar();
+  }
+
+  function renderCalDay() {
+    var list = document.getElementById('calDayList');
+    if (!list) return;
+    var items = itemsDueOn(selectedDate);
+    document.getElementById('calDayCount').textContent = items.length + ' 条';
+    var n = diffDays(selectedDate);
+    var when = n === 0 ? '今天' : (n === 1 ? '明天' : (n === -1 ? '昨天' : (n > 0 ? n + ' 天后' : Math.abs(n) + ' 天前')));
+    document.getElementById('calDayTitle').textContent = selectedDate + '（' + when + '）';
+    fill(list, items, true, '这一天没有需要复习的内容。');
+  }
+
+  function renderCalendar() {
+    var grid = document.getElementById('calGrid');
+    if (!grid) return;
+    document.getElementById('calTitle').textContent = calYear + ' 年 ' + (calMonth + 1) + ' 月';
+
+    var firstWeekday = (new Date(calYear, calMonth, 1).getDay() + 6) % 7;   // 周一为第一列
+    var daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+    var daysInPrev = new Date(calYear, calMonth, 0).getDate();
+    var totalCells = Math.ceil((firstWeekday + daysInMonth) / 7) * 7;
+    var todayS = todayStr();
+
+    // 预排序，便于按日期统计「到期 + 逾期」的数量
+    var active = visibleItems().filter(function (it) { return !it.done && it.nextReview; })
+      .map(function (it) { return it.nextReview; })
+      .sort();
+    function dueUpTo(dateStr) {
+      var lo = 0, hi = active.length;
+      while (lo < hi) {
+        var mid = (lo + hi) >> 1;
+        if (active[mid] <= dateStr) { lo = mid + 1; } else { hi = mid; }
+      }
+      return lo;
+    }
+    function dueExact(dateStr) {
+      var c = 0;
+      for (var k = 0; k < active.length; k++) { if (active[k] === dateStr) c++; }
+      return c;
+    }
+
+    grid.textContent = '';
+    for (var i = 0; i < totalCells; i++) {
+      var dayNum;
+      var cellMonth = calMonth;
+      var inMonth = true;
+      if (i < firstWeekday) {
+        dayNum = daysInPrev - firstWeekday + 1 + i;
+        cellMonth = calMonth - 1;
+        inMonth = false;
+      } else if (i >= firstWeekday + daysInMonth) {
+        dayNum = i - (firstWeekday + daysInMonth) + 1;
+        cellMonth = calMonth + 1;
+        inMonth = false;
+      } else {
+        dayNum = i - firstWeekday + 1;
+      }
+
+      var ds = toDateStr(new Date(calYear, cellMonth, dayNum));   // 跨月由 Date 自动归一
+      var cell = el('div', 'cal-cell' + (inMonth ? '' : ' out'));
+      if (ds === todayS) cell.className += ' today';
+      if (ds === selectedDate) cell.className += ' selected';
+
+      var count = dueUpTo(ds);
+      var exact = dueExact(ds);
+      if (count > 0) cell.className += ' due';
+
+      cell.appendChild(el('span', 'cal-daynum', String(dayNum)));
+      if (count > 0) {
+        var badge = el('span', 'cal-badge' + (count > exact ? ' overdue' : ''), count + '条');
+        cell.appendChild(badge);
+      } else {
+        cell.appendChild(el('span', 'cal-badge-slot'));
+      }
+
+      cell.setAttribute('data-date', ds);
+      cell.setAttribute('title', ds + '：' + count + ' 条待复习');
+      cell.addEventListener('click', (function (dateStr) {
+        return function () { selectCalDay(dateStr); };
+      })(ds));
+      grid.appendChild(cell);
+    }
+
+    renderCalDay();
+  }
+
   function render() {
     var due = todayItems();
     var all = visibleItems();
@@ -617,6 +899,9 @@
       due.length ? '' : '今天没有需要复习的内容，休息一下吧 🌿');
     fill(document.getElementById('allList'), allItems(), true,
       '还没有条目，先在上面添加一条吧。');
+
+    // 复习完成后，日历上的圆点/数字角标随之实时刷新
+    if (viewMode === 'calendar') renderCalendar();
   }
 
   /* ---------- 导出（本地备份） ---------- */
@@ -928,6 +1213,46 @@
     window.alert('配置已保存在本机 localStorage。');
   }
 
+  /* ---------- 编辑条目（标题 / 内容） ---------- */
+  var editId = null;
+
+  function openEdit(id) {
+    var it = find(id);
+    if (!it) return;
+    editId = id;
+    document.getElementById('editTitle').value = it.title || '';
+    document.getElementById('editContent').value = it.content || '';
+    document.getElementById('editMask').classList.remove('hidden');
+    setTimeout(function () {
+      var t = document.getElementById('editTitle');
+      try { t.focus(); } catch (e) {}
+    }, 50);
+  }
+
+  function closeEdit() {
+    editId = null;
+    document.getElementById('editMask').classList.add('hidden');
+  }
+
+  function saveEdit() {
+    if (!editId) { closeEdit(); return; }
+    var it = find(editId);
+    if (!it) { closeEdit(); return; }
+    var title = document.getElementById('editTitle').value.trim();
+    var content = document.getElementById('editContent').value.trim();
+    if (!title && !content) {
+      window.alert('标题和内容不能同时为空。');
+      return;
+    }
+    it.title = title || content.slice(0, 20);
+    it.content = content;
+    it.updatedAt = new Date().toISOString();
+    save();
+    render();
+    pushItem(it.id); // 自动推送到 Supabase（review_items 表 upsert）
+    closeEdit();
+  }
+
   /* ---------- 通知提醒 ---------- */
   function updateNotifyState() {
     var box = document.getElementById('notifyState');
@@ -989,6 +1314,12 @@
     document.getElementById('syncBtn').addEventListener('click', function () { syncNow(); });
     document.getElementById('notifyBtn').addEventListener('click', askNotify);
 
+    document.getElementById('viewListBtn').addEventListener('click', function () { setView('list'); });
+    document.getElementById('viewCalBtn').addEventListener('click', function () { setView('calendar'); });
+    document.getElementById('calPrev').addEventListener('click', function () { shiftMonth(-1); });
+    document.getElementById('calNext').addEventListener('click', function () { shiftMonth(1); });
+    document.getElementById('calToday').addEventListener('click', goToday);
+
     document.getElementById('settingsBtn').addEventListener('click', openSettings);
     document.getElementById('settingsClose').addEventListener('click', closeSettings);
     document.getElementById('settingsMask').addEventListener('click', function (e) {
@@ -1005,13 +1336,25 @@
       signOutCloud();
       closeSettings();
     });
+
+    document.getElementById('editSave').addEventListener('click', saveEdit);
+    document.getElementById('editCancel').addEventListener('click', closeEdit);
+    document.getElementById('editClose').addEventListener('click', closeEdit);
+    document.getElementById('editMask').addEventListener('click', function (e) {
+      if (e.target === document.getElementById('editMask')) closeEdit();
+    });
   }
 
   /* ---------- 启动 ---------- */
   function init() {
     load();
+    var now = new Date();
+    calYear = now.getFullYear();
+    calMonth = now.getMonth();
+    selectedDate = todayStr();
     bind();
     render();
+    setView('list');
     updateNotifyState();
     startCloud();
     window.addEventListener('visibilitychange', function () {
